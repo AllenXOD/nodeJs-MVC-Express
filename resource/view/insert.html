@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>添加英雄</title>
+
+  <!-- 导入jquery -->
+  <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+  <!-- 导入bootstrap -->
+  <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+  <script src="/node_modules/bootstrap/dist/js/bootstrap.js"></script>
+  <!-- 导入art-template -->
+  <script src="/node_modules/art-template/lib/template-web.js"></script>
+</head>
+
+<body>
+  <!-- bootstrap的容器  带版心的-->
+  <div class="container">
+    <!-- 导航 -->
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span> <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">欢迎进入CQ后台管理</a>
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container-fluid -->
+    </nav>
+    <!-- 底部的内容 -->
+    <div class="row">
+      <div class="col-xs-9">
+        <div class="panel panel-default">
+          <!-- 标题 -->
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <!-- 面包屑导航 -->
+              <ol class="breadcrumb">
+                <li><a href="#">首页</a></li>
+                <li><a href="#">英雄管理</a></li>
+              </ol>
+            </h3>
+          </div>
+
+          <!-- 内容 -->
+          <div class="panel-body">
+            <form class="form-horizontal" id="form">
+              <div class="form-group">
+                <label for="name" class="col-sm-2 control-label">姓名</label>
+                <div class="col-sm-10">
+                  <input type="text" name="name" class="form-control" id="heroName" placeholder="姓名">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="skill" class="col-sm-2 control-label">技能</label>
+                <div class="col-sm-10">
+                  <input type="text" name="skill" class="form-control" id="skill" placeholder="技能">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="icon" class="col-sm-2 control-label">头像</label>
+                <div class="col-sm-10">
+                  <input type="file" name="icon" class="form-control" id="icon">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <img src="" alt="" id="img" width="200">
+                  <a href="#" id="download" download="img.png">点击下载</a>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" class="btn btn-default btn-insert">新增</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    $(function () {
+      // 使用FormData实现文件上传
+      $('#form').on('submit', function (e) {
+        e = e || window.event;
+        e.preventDefault();
+        // 创建formData对象 参数是DOM对象
+        var formData = new FormData($('form')[0]);
+
+        $.ajax({
+          url: '/heroAdd',
+          type: 'post',
+          dataType: 'json',
+          /* 
+            ajax默认请求方式是 application/x-www-form-urlencoded,只能传文本
+            将其改成表单默认的属性 multipart/form-data
+          */
+          contentType: false,
+          /* 取消jquery默认的表单序列化 <jQuery特有属性> */
+          processData: false,
+          data: formData,
+          success: function (obj) {
+            // console.log(obj);
+            if (obj.err_code == 0) {
+              location.href = '/';
+            } else {
+              alert(obj.err_mag)
+            }
+          }
+        })
+      })
+
+      // 使用fileRead实现文件预览 + 文件尺寸大小
+
+      // 给input标签注册onchanger事件
+      $('#icon').on('change', function () {
+        // 创建FileReader对象
+        let reader = new FileReader();
+        // 开始读取: 异步
+        // 如果表单input元素type是file, 当选取文件之后就会有一个files属性获取文件信息
+        // console.log(this.files);
+        reader.readAsDataURL(this.files[0]);
+        let size = this.files[0].size / 1024;
+
+        // 给fileReader注册一个onload事件
+        reader.onload = function () {
+          // 文件的base64数据
+          // console.log(reader.result);
+          // 文件预览
+          $('#img').attr('src', reader.result);
+          // 文件尺寸
+          // console.log($('#img').width() + $('#img').height());
+          // 文件大小 两种方式
+          console.log(size);
+          /* 二进制数据在转成base文件之后 , 文件会增加 25% */
+          console.log(reader.result.length / 1024 * 0.75);
+
+          /* a标签离线下载 使用伪协议
+              javascript: void(0); 阻止默认跳转
+              data:images/png,base64,数据  图片下载
+              data:text/plain,文本  文本下载
+          */
+          $('#download').attr('href', reader.result);
+        }
+      })
+    })
+  </script>
+</body>
+
+</html>
